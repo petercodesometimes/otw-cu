@@ -1,0 +1,22 @@
+<div class="card" style="max-width:700px">
+<h2>My class schedule</h2>
+<p>Add classes for the day you’re planning. The planner checks every class and gets you to the next one on time.</p>
+<div id="classlist">
+</div>
+<form id="classform">
+<label>Class name<input id="classname" required placeholder="Intro to Computer Science" maxlength="80">
+</label>
+<div class="fields">
+<label>Start<input id="classstart" type="time" required value="13:00">
+</label>
+<label>End<input id="classend" type="time" required value="14:15">
+</label>
+<label class="full">Building<select id="classlocation">
+</select>
+</label>
+</div>
+<button>Add class</button>
+<p id="classerror" role="alert">
+</p>
+</form>
+</div>

@@ -1,0 +1,91 @@
+<div class="layout">
+<aside>
+<div class="card">
+<h2>Find your window</h2>
+<div class="fields">
+<label>Start time<input id="start" type="time" value="12:15">
+</label>
+<label>Finish by<input id="end" type="time" value="13:00">
+</label>
+<label class="full">Starting point<select id="origin">
+</select>
+</label>
+<label class="full">End at<select id="destination">
+</select>
+</label>
+<label class="full">Arrival buffer<select id="buffer">
+<option value="5">5 minutes · recommended</option>
+<option value="10">10 minutes</option>
+<option value="0">No buffer</option>
+</select>
+</label>
+</div>
+<button id="plan" style="width:100%">Plan my day ↗</button>
+<p id="message" role="alert">
+</p>
+<div class="notice">Classes automatically block overlapping time. Walking times are estimates; campus hours below are demo data.</div>
+</div>
+<div class="card">
+<div class="row">
+<h2>Your stops</h2>
+<span class="small" id="count">
+</span>
+</div>
+<div id="errands">
+</div>
+<details>
+<summary style="cursor:pointer;color:var(--green);padding-top:13px">＋ Add a stop</summary>
+<form id="add">
+<label>Task name<input id="task" required maxlength="80" placeholder="Pick up a print order">
+</label>
+<label>Location<select id="location">
+</select>
+</label>
+<div class="fields">
+<label>Duration (min)<input id="duration" type="number" min="1" max="180" value="10" required>
+</label>
+<label>Deadline (optional)<input id="deadline" type="time">
+</label>
+</div>
+<button>Add stop</button>
+</form>
+</details>
+</div>
+</aside>
+<div>
+<div class="hero">
+<div>
+<div class="eyebrow">WHAT FITS ON THE WAY</div>
+<strong id="headline">Let's make a plan.</strong>
+<div class="small" id="subline">
+</div>
+</div>
+<div class="stats">
+<div>
+<b id="walkstat">—</b>
+<span class="small">min walking</span>
+</div>
+<div>
+<b id="sparestat">—</b>
+<span class="small">min to spare*</span>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="row">
+<h2>Your next best route</h2>
+<span class="tag">ESTIMATED WALKING</span>
+</div>
+<div class="map">
+<svg id="map" viewBox="0 0 700 235" aria-label="Schematic campus route">
+</svg>
+<span class="maplabel">Campus schematic · not turn-by-turn directions</span>
+</div>
+<div id="timeline" aria-live="polite">
+</div>
+<div id="deferred">
+</div>
+<div class="notice">*Spare time excludes your arrival buffer. Plans maximize completed tasks, then minimize walking. Local data stays in this browser.</div>
+</div>
+</div>
+</div>
