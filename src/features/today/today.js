@@ -9,8 +9,16 @@ import { clearAccepted, nextStop, advance } from '../planning/accept.js';
 import { legOf } from '../../components/route-map.js';
 import { showRoute } from '../../components/live-map.js';
 import { focusErrandForm } from '../errands/errands.js';
+import { dayGrid } from '../../components/day-grid.js';
 
-const row = (time, card) => `<div class="trow"><span class="tlabel">${time == null ? '' : clock(time)}</span>${card}</div>`;
+// A card placed in the hourly day grid at `start`.
+const row = (start, html) => ({ start, html });
+
+// Shading for classes and free windows in the hourly day grid.
+export const daySpans = day => [
+  ...day.classes.map(c => ({ start: c.start, end: c.end, kind: 'class' })),
+  ...day.windows.map(w => ({ start: w.start, end: w.end, kind: 'window' }))
+];
 
 function greeting() {
   const h = new Date().getHours();
@@ -33,7 +41,7 @@ function windowRows(day, w, i, primary) {
   const acc = day.accepted;
   if (w.accepted) return acceptedRows(w);
   if (!route.length) {
-    return [row(w.start, `<div class="card"><p class="meta">Free · ${w.waiting ? 'nothing fits this window' : 'nothing needed'}</p></div>`)];
+    return [row(w.start, `<div class="card"><p class="meta">Free ${clock(w.start)} – ${clock(w.end)} · ${w.waiting ? 'nothing fits this window' : 'nothing needed'}</p></div>`)];
   }
   const moved = acc ? route.filter(t => acc.movedIds.includes(t.id)) : [];
   if (moved.length) {
@@ -45,8 +53,8 @@ function windowRows(day, w, i, primary) {
   }
   const names = route.map(t => esc(t.name)).join(' · ');
   return [row(w.start, `<div class="card window"><div class="wrow"><div>
-    <h3>Free window · ${span(w.end - w.start)}</h3>
-    <p class="meta">Fits ${plural(route.length, 'errand')} ${w.next ? 'before class' : 'after class'}</p>
+    <h3>Free window · ${clock(w.start)} – ${clock(w.end)}</h3>
+    <p class="meta">${span(w.end - w.start)} · Fits ${plural(route.length, 'errand')} ${w.next ? 'before class' : 'after class'}</p>
     <p class="meta">${names}</p></div>
     <button class="${i === primary ? 'primary' : 'outline'} sm" data-plan="${i}">Plan this window</button></div></div>`)];
 }
@@ -55,18 +63,19 @@ function acceptedRows(w) {
   const acc = w.accepted, next = nextStop(acc);
   const rows = [];
   acc.stops.forEach((s, k) => {
-    if (s.walk && k > 0) rows.push(row(s.arrival - s.walk, `<div class="card thin"><p class="meta">Walk ${s.walk} min to ${esc(place(s.loc).short)}</p></div>`));
+    if (s.walk) rows.push(row(s.arrival - s.walk, `<div class="card thin"><p class="meta">${clock(s.arrival - s.walk)} · Walk ${s.walk} min to ${esc(place(s.loc).short)}</p></div>`));
     const status = s.finished ? '<span class="status">Done ✓</span>'
       : s === next ? `<span class="badge">${acc.active === s.id ? 'On the way' : 'Next'}</span>`
       : '<span class="status">Not started</span>';
-    rows.push(row(k === 0 ? acc.start : s.begin, `<div class="card stop ${s.finished ? 'finished' : ''}">
-      <h3>${esc(s.name)}</h3><span class="meta">${esc(place(s.loc).short)} · ${s.duration} min</span>${status}</div>`));
+    rows.push(row(s.begin, `<div class="card stop ${s.finished ? 'finished' : ''}">
+      <h3>${esc(s.name)}</h3><span class="meta">${clock(s.begin)} · ${esc(place(s.loc).short)} · ${s.duration} min</span>${status}</div>`));
   });
   const last = acc.stops.at(-1);
   const endText = acc.dest
     ? `${acc.buffer ? 'Buffer, then walk' : 'Walk'} to class (arrive ${clock(acc.finish)})`
     : `Done · free until ${clock(acc.end)}`;
-  rows.push(row(last ? last.done : acc.start, `<div class="card thin"><p class="meta">${endText}</p></div>`));
+  const endAt = last ? last.done : acc.start;
+  rows.push(row(endAt, `<div class="card thin"><p class="meta">${clock(endAt)} · ${endText}</p></div>`));
   return rows;
 }
 
@@ -106,9 +115,13 @@ export function renderToday(day) {
   const items = [
     ...day.classes.map(c => ({ start: c.start, rows: [row(c.start, classCard(c, leaveBy.get(c.id)))] })),
     ...day.windows.map((w, i) => ({ start: w.start, rows: windowRows(day, w, i, primary?.i) }))
-  ].sort((a, b) => a.start - b.start);
-  $('daylist').innerHTML = items.flatMap(item => item.rows).join('')
-    || '<p class="meta">No classes or free windows today.</p>';
+  ];
+  $('daylist').innerHTML = dayGrid({
+    entries: items.flatMap(item => item.rows),
+    spans: daySpans(day),
+    hours: day.hours,
+    now: nowMinutes()
+  });
 
   // Sidebar
   if (acc) {

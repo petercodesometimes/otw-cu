@@ -2,10 +2,18 @@ import { state } from '../../state/store.js';
 import { optimize } from './optimizer.js';
 import { todayIso, dayName } from '../../lib/date.js';
 
-// The planning day and where it starts. Free windows shorter than MIN_WINDOW are ignored.
-export const DAY_START = 540;   // 9:00 AM
-export const DAY_END = 1080;    // 6:00 PM
+// The schedule covers the whole day (midnight to midnight). Errands are only planned
+// inside "task hours", which people change on the Settings page.
+// Free windows shorter than MIN_WINDOW are ignored.
+export const DEFAULT_TASK_HOURS = { start: 480, end: 1320 };   // 8:00 AM – 10:00 PM
 export const MIN_WINDOW = 20;
+
+export function taskHours() {
+  return {
+    start: state.settings.dayStart ?? DEFAULT_TASK_HOURS.start,
+    end: state.settings.dayEnd ?? DEFAULT_TASK_HOURS.end
+  };
+}
 export const HOME = 'low';
 
 export const nowMinutes = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
@@ -29,15 +37,17 @@ export function candidatesFor(date, { includeUnscheduled = date === todayIso() }
     .map(t => ({ ...t, deadline: deadlineOn(t, date) }));
 }
 
-function gapsOn(classes) {
+// Free windows inside task hours, each ending at the next class (or the end of task hours).
+function gapsOn(classes, { start: from, end: to }) {
   const gaps = [];
-  let cursor = DAY_START, loc = HOME;
+  let cursor = from, loc = HOME;
   for (const c of classes) {
+    if (c.start >= to) break;
     if (c.start - cursor >= MIN_WINDOW) gaps.push({ start: cursor, end: c.start, origin: loc, dest: c.loc, next: c });
     cursor = Math.max(cursor, c.end);
     loc = c.loc;
   }
-  if (DAY_END - cursor >= MIN_WINDOW) gaps.push({ start: cursor, end: DAY_END, origin: loc, dest: null, next: null });
+  if (to - cursor >= MIN_WINDOW) gaps.push({ start: cursor, end: to, origin: loc, dest: null, next: null });
   return gaps;
 }
 
@@ -46,7 +56,8 @@ function gapsOn(classes) {
 // Today's accepted window keeps its frozen route.
 export function planDay(date = todayIso(), { candidates } = {}) {
   const classes = classesOn(date);
-  const gaps = gapsOn(classes);
+  const hours = taskHours();
+  const gaps = gapsOn(classes, hours);
   let accepted = date === todayIso() && state.accepted?.date === date ? state.accepted : null;
   if (accepted && !gaps.some(g => g.start === accepted.start)) accepted = null;
   const locked = new Set(accepted ? accepted.stops.map(s => s.id) : []);
@@ -66,5 +77,5 @@ export function planDay(date = todayIso(), { candidates } = {}) {
     remaining = remaining.filter(t => !placed.has(t.id));
     return { ...gap, buffer, waiting, best, skipped: remaining };
   });
-  return { date, classes, windows, unplanned: remaining, accepted };
+  return { date, classes, windows, hours, unplanned: remaining, accepted };
 }

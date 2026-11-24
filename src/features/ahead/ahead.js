@@ -4,13 +4,15 @@ import { todayIso, addDays, weekStart, dayName, fromIso, monthDay, weekdayLong, 
 import { dueLabel } from '../../lib/labels.js';
 import { place } from '../../data/locations.js';
 import { state, save } from '../../state/store.js';
-import { planDay, classesOn, candidatesFor } from '../planning/day.js';
+import { planDay, classesOn, candidatesFor, nowMinutes } from '../planning/day.js';
 import { focusErrandForm } from '../errands/errands.js';
+import { daySpans } from '../today/today.js';
+import { dayGrid } from '../../components/day-grid.js';
 
 let selected = todayIso();
 
 const lastWord = name => { const w = name.trim().split(/\s+/).at(-1); return w[0].toUpperCase() + w.slice(1); };
-const row = (time, card) => `<div class="trow"><span class="tlabel">${clock(time)}</span>${card}</div>`;
+const row = (start, html) => ({ start, html });
 
 function dayStatus(date) {
   const today = todayIso();
@@ -35,19 +37,18 @@ export function renderAhead() {
 
   const day = planDay(selected);
   $('aheadtitle').textContent = `${longDate(selected)}: free time and plan`;
-  const items = [
-    ...day.classes.map(c => ({
-      start: c.start,
-      html: row(c.start, `<div class="card class"><h3>${esc(c.name)}</h3><p class="meta">${clock(c.start)} – ${clock(c.end)} · ${esc(place(c.loc).short)}</p></div>`)
-    })),
-    ...day.windows.map(w => ({
-      start: w.start,
-      html: w.best.route.length
-        ? w.best.route.map(t => row(t.begin, `<div class="card stop solo"><h3>${esc(t.name)}</h3><p class="meta">${esc(place(t.loc).short)} · ${t.duration} min</p></div>`)).join('')
-        : row(w.start, `<div class="card window"><p class="meta">Free window ${clock(w.start)} – ${clock(w.end)} · nothing planned</p></div>`)
-    }))
-  ].sort((a, b) => a.start - b.start);
-  $('aheadlist').innerHTML = items.map(i => i.html).join('') || '<p class="meta">No free time on this day.</p>';
+  const entries = [
+    ...day.classes.map(c => row(c.start, `<div class="card class"><h3>${esc(c.name)}</h3><p class="meta">${clock(c.start)} – ${clock(c.end)} · ${esc(place(c.loc).short)}</p></div>`)),
+    ...day.windows.flatMap(w => w.best.route.length
+      ? w.best.route.map(t => row(t.begin, `<div class="card stop solo"><h3>${esc(t.name)}</h3><p class="meta">${clock(t.begin)} · ${esc(place(t.loc).short)} · ${t.duration} min</p></div>`))
+      : [row(w.start, `<div class="card window"><p class="meta">Free window ${clock(w.start)} – ${clock(w.end)} · nothing planned</p></div>`)])
+  ];
+  $('aheadlist').innerHTML = dayGrid({
+    entries,
+    spans: daySpans(day),
+    hours: day.hours,
+    now: selected === today ? nowMinutes() : null
+  });
 
   $('aheaddidntfit').innerHTML = day.unplanned.length
     ? `<div class="card dashed"><h3>Didn’t fit on ${weekdayLong(selected)}</h3><p class="meta">${day.unplanned.map(t => esc(t.name)).join(' · ')}. Try another day or a shorter errand.</p></div>`

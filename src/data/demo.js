@@ -16,7 +16,8 @@ export const seed = () => {
       { id: 5, name: 'Data Structures', days: ['Mon', 'Wed', 'Fri'], start: 780, end: 855, loc: 'mudd' },
       { id: 6, name: 'Writing Seminar', days: ['Tue', 'Thu'], start: 700, end: 775, loc: 'butler' }
     ],
-    settings: { pace: 'Average', buffer: 5 },
+    // dayStart/dayEnd: task hours in minutes after midnight (errands are only planned inside them).
+    settings: { pace: 'Average', buffer: 5, dayStart: 480, dayEnd: 1320 },
     walk: { visible: true, publicOnly: true, waved: [] },
     // Today's accepted plan: a frozen copy of one window's route (see planning/accept.js).
     accepted: null

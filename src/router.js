@@ -1,7 +1,7 @@
 import { $ } from './lib/dom.js';
 // Add a page here, then add pages/NAME.html and a section and tab in index.html.
 // Hashes may carry a parameter: #plan/1 opens the plan for free window 1.
-export const pageNames = ['today', 'ahead', 'errands', 'classes', 'map', 'walk', 'plan'];
+export const pageNames = ['today', 'ahead', 'errands', 'classes', 'map', 'walk', 'settings', 'plan'];
 export async function loadPages() {
   await Promise.all(pageNames.map(async name => {
     const response = await fetch(`pages/${name}.html`);

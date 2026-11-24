@@ -12,6 +12,7 @@ import { renderClasses, bindClasses } from './features/classes/classes.js';
 import { renderMap, bindMap } from './features/map/map.js';
 import { renderWalk, bindWalk } from './features/walk/walk.js';
 import { renderPlan, bindPlan } from './features/planning/planner.js';
+import { renderSettings, bindSettings } from './features/settings/settings.js';
 
 const PACE = { Slow: 0.85, Average: 1, Fast: 1.15 };
 
@@ -31,6 +32,7 @@ function render() {
   renderClasses();
   renderMap(day);
   renderWalk(day);
+  renderSettings();
   if (page === 'plan') renderPlan(day, Number(param));
 }
 
@@ -45,6 +47,7 @@ async function start() {
   bindClasses(render);
   bindMap(getDay, render);
   bindWalk(render);
+  bindSettings(render);
   bindPlan(getDay, render);
   bindNavigation(render);
 }

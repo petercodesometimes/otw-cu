@@ -1,0 +1,48 @@
+<header class="pagehead">
+  <div>
+    <h1>Settings</h1>
+    <p class="meta">Changes save automatically and apply to every day.</p>
+  </div>
+</header>
+<div class="layout">
+  <div class="col-main">
+    <form class="card form" id="hoursform">
+      <h3>Task hours</h3>
+      <p class="meta">Errands are only planned between these times. Your schedule still shows the whole day, midnight to midnight.</p>
+      <div class="fields narrow">
+        <label>Day starts<input id="daystart" type="time" required></label>
+        <label>Day ends<input id="dayend" type="time" required></label>
+      </div>
+      <p class="meta small">Set “Day ends” to 12:00 AM to plan until midnight.</p>
+      <p class="error" id="hourserror" role="alert"></p>
+    </form>
+    <div class="card form">
+      <h3>Walking</h3>
+      <div class="fields narrow">
+        <label>Walking pace
+          <select id="pace">
+            <option>Slow</option>
+            <option>Average</option>
+            <option>Fast</option>
+          </select>
+        </label>
+        <label>Buffer before class
+          <select id="buffer">
+            <option value="0">None</option>
+            <option value="5">5 min</option>
+            <option value="10">10 min</option>
+            <option value="15">15 min</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </div>
+  <aside class="col-side">
+    <div class="card dashed">
+      <h3>Demo data</h3>
+      <p class="meta">Replace your errands, classes, plan, and settings with the sample data.</p>
+      <button class="outline sm danger" id="reset">Reset demo data</button>
+    </div>
+    <p class="meta" id="settingsmsg" role="status"></p>
+  </aside>
+</div>

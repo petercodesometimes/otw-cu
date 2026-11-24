@@ -1,16 +1,13 @@
 import { $, esc, plural } from '../../lib/dom.js';
 import { clock, mins, toInput } from '../../lib/time.js';
 import { place } from '../../data/locations.js';
-import { state, save, resetState } from '../../state/store.js';
+import { state, save } from '../../state/store.js';
 import { matchPlace, parseIcs, parsePasted } from './import.js';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const PACES = ['Slow', 'Average', 'Fast'];
-const BUFFERS = [0, 5, 10];
 const FALLBACK_PLACE = 'low';
 let editingId = null;
 
-const next = (list, value) => list[(list.indexOf(value) + 1) % list.length];
 const overlaps = (a, ignoreId) => state.classes.find(c =>
   c.id !== ignoreId && c.days.some(d => a.days.includes(d)) && a.start < c.end && a.end > c.start);
 
@@ -22,8 +19,6 @@ export function renderClasses() {
       <button class="pill" data-edit="${c.id}">${editingId === c.id ? 'Editing' : 'Edit'}</button></div>
       <p class="meta">${c.days.join(' / ')} · ${clock(c.start)}–${clock(c.end)} · ${esc(place(c.loc).short)}</p></div>`)
     .join('') || '<p class="meta">No classes yet. Import them above or add one on the right.</p>';
-  $('pace').textContent = state.settings.pace;
-  $('buffer').textContent = `${state.settings.buffer} min`;
 }
 
 function setEditing(c) {
@@ -132,12 +127,4 @@ export function bindClasses(onChange) {
     onChange();
   };
 
-  $('pace').onclick = () => { state.settings.pace = next(PACES, state.settings.pace); save(); onChange(); };
-  $('buffer').onclick = () => { state.settings.buffer = next(BUFFERS, state.settings.buffer); save(); onChange(); };
-  $('reset').onclick = () => {
-    if (!confirm('Replace your errands, classes, and plan with the demo data?')) return;
-    resetState();
-    setEditing(null);
-    onChange();
-  };
 }

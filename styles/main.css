@@ -156,19 +156,42 @@ h3 { font-size: 15px; font-weight: 650; margin: 0 0 3px; }
 .stat { margin: 0; }
 .stat b { display: block; font-size: 22px; font-weight: 800; }
 
-/* Timeline with a time gutter */
-.trow {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 8px;
-  align-items: start;
-}
-.tlabel {
-  font-size: 12px;
+/* Hourly day grid (Today, Plan ahead) */
+.daygrid { border-top: 1px solid #e3e3e3; margin-top: 8px; }
+.hrow { display: grid; grid-template-columns: 56px minmax(0, 1fr); }
+.hlabel {
+  font-size: 11px;
   color: var(--muted);
   text-align: right;
-  padding-top: 13px;
+  padding-right: 10px;
+  white-space: nowrap;
+  transform: translateY(-7px);
 }
+.hcell {
+  position: relative;
+  min-height: 56px;
+  border-left: 1px solid #e3e3e3;
+  border-bottom: 1px solid #e3e3e3;
+}
+.hrow.off .hcell { min-height: 24px; }
+.hrow.off .hlabel { color: #aaa; }
+.shade { position: absolute; left: 0; right: 0; z-index: 0; }
+.shade.class { background: #f0f0f0; border-left: 3px solid #b8b8b8; }
+.shade.window { background: rgba(230, 238, 248, .7); border-left: 3px solid var(--blue); }
+.shade.off { background: repeating-linear-gradient(135deg, #f5f5f5 0 6px, #fff 6px 12px); }
+.nowline { position: absolute; left: -5px; right: 0; height: 2px; background: #d0342c; z-index: 2; }
+.nowline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d0342c;
+}
+.hcontent { position: relative; z-index: 1; padding: 5px 8px 1px; }
+.hcontent .card { margin-bottom: 4px; }
 .wrow {
   display: flex;
   justify-content: space-between;
@@ -318,6 +341,7 @@ input:not([type=checkbox]), select, textarea {
 textarea { resize: vertical; margin: 8px 0; }
 input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
 .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fields.narrow { max-width: 420px; margin-top: 10px; }
 .formactions { display: flex; gap: 8px; margin-top: 8px; }
 .error { color: #a3321f; font-size: 13px; margin: 0 0 8px; }
 .error:empty { display: none; }

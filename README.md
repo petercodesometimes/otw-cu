@@ -19,7 +19,8 @@ A desktop web app (columns stack on narrow screens), styled after the CodeCollab
 - **Plan** (`#plan/N`): the route for today's free window N, what didn't fit and why, a route map, and Start plan.
 - **Plan ahead** (`#ahead`): pick a day in any week, see its free time, add unscheduled errands to it, or auto-plan it.
 - **Errands** (`#errands`): errand cards with location filters and an add form.
-- **Classes** (`#classes`): import from an `.ics` file or pasted text, edit classes, and set walking pace and buffer.
+- **Classes** (`#classes`): import from an `.ics` file or pasted text, and edit classes.
+- **Settings** (`#settings`): task hours (when errands can be planned), walking pace, buffer, and reset demo data.
 - **Map** (`#map`): schematic route map per window, or all stops.
 - **Walk together** (`#walk`): walking-buddy UI. Matching is not live; buddies are labeled sample profiles.
 
@@ -38,6 +39,7 @@ A desktop web app (columns stack on narrow screens), styled after the CodeCollab
 | Plan ahead page | `src/features/ahead/ahead.js` |
 | Errands page | `src/features/errands/errands.js` |
 | Classes page | `src/features/classes/classes.js` |
+| Settings page | `src/features/settings/settings.js` |
 | `.ics` and pasted-schedule parsing | `src/features/classes/import.js` |
 | Map page | `src/features/map/map.js` |
 | Interactive map (Leaflet + OpenStreetMap, real walking paths) | `src/components/live-map.js` |
@@ -68,8 +70,8 @@ Preserve existing element IDs when changing layouts because feature modules use 
 - Errand `dueDate` and `scheduled` are `YYYY-MM-DD` strings or null. Unscheduled errands are planned on today.
 - Task durations and arrival buffers are minutes.
 - Location `lat`/`lon` supply walking estimates. Set `verified` to a date once hours are checked.
-- Classes repeat weekly on their `days` (`'Mon'`…`'Fri'`). The planning day runs 9:00 AM–6:00 PM (`src/features/planning/day.js`).
-- Change demo data, then use Classes → Settings → Reset demo data to replace previously saved browser data.
+- Classes repeat weekly on their `days` (`'Mon'`…`'Fri'`). The schedule shows the whole day (midnight to midnight); errands are only planned inside task hours (`settings.dayStart`/`dayEnd`, default 8:00 AM–10:00 PM), set on the Settings page.
+- Change demo data, then use Settings → Reset demo data to replace previously saved browser data.
 - Unrecognized buildings in imported classes fall back to Low Library; fix them with Edit.
 
 ## Planning algorithm
