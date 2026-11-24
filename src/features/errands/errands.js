@@ -2,7 +2,7 @@ import { $, esc } from '../../lib/dom.js';
 import { mins } from '../../lib/time.js';
 import { dayName, todayIso } from '../../lib/date.js';
 import { dueLabel, hoursLabel, verifiedLabel } from '../../lib/labels.js';
-import { place, categories } from '../../data/locations.js';
+import { place, places } from '../../data/locations.js';
 import { state, save } from '../../state/store.js';
 
 // Exhaustive route search keeps the MVP at eight errands.
@@ -14,10 +14,13 @@ export function focusErrandForm() {
 }
 
 export function renderErrands() {
-  $('filters').innerHTML = [{ id: 'all', label: 'All' }, ...categories].map(c =>
-    `<button class="pill ${filter === c.id ? 'selected' : ''}" data-filter="${c.id}">${c.label}</button>`
+  // One filter pill per location that has errands, in the order places are listed.
+  const used = places.filter(p => state.tasks.some(t => t.loc === p.id));
+  if (!used.some(p => p.id === filter)) filter = 'all';
+  $('filters').innerHTML = [{ id: 'all', short: 'All' }, ...used].map(p =>
+    `<button class="pill ${filter === p.id ? 'selected' : ''}" data-filter="${p.id}">${esc(p.short)}</button>`
   ).join('');
-  const shown = state.tasks.filter(t => filter === 'all' || place(t.loc).category === filter);
+  const shown = state.tasks.filter(t => filter === 'all' || t.loc === filter);
   $('errandlist').innerHTML = shown.map(t => {
     const p = place(t.loc);
     const details = [
@@ -30,7 +33,7 @@ export function renderErrands() {
       <p class="meta">${esc(p.short)} · ${hoursLabel(p)} · ${verifiedLabel(p)}${t.note ? ` · ${esc(t.note)}` : ''}</p>
       ${details.length ? `<p class="meta">${details.join(' · ')}</p>` : ''}
       <button class="link danger" data-delete="${t.id}">Remove</button></div>`;
-  }).join('') || `<p class="meta">${state.tasks.length ? 'No errands in this category.' : 'Nothing on your list yet. Add one on the right.'}</p>`;
+  }).join('') || `<p class="meta">${state.tasks.length ? 'No errands at this location.' : 'Nothing on your list yet. Add one on the right.'}</p>`;
 }
 
 export function bindErrands(onChange) {

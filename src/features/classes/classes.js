@@ -99,9 +99,6 @@ export function bindClasses(onChange) {
     $('pastebox').classList.add('hidden');
     onChange();
   };
-  $('photobtn').onclick = () => {
-    $('importmsg').textContent = 'Adding by photo isn’t available yet. Upload an .ics file or paste your schedule instead.';
-  };
 
   $('classlist').onclick = e => {
     const edit = e.target.closest('[data-edit]');

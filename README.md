@@ -18,7 +18,7 @@ A desktop web app (columns stack on narrow screens), styled after the CodeCollab
 - **Today** (`#today`): stats, a time-gutter timeline of classes and free windows, next-up card, waiting errands, and a route preview. After you start a plan it shows each stop, progress, and Start walking / Mark done.
 - **Plan** (`#plan/N`): the route for today's free window N, what didn't fit and why, a route map, and Start plan.
 - **Plan ahead** (`#ahead`): pick a day in any week, see its free time, add unscheduled errands to it, or auto-plan it.
-- **Errands** (`#errands`): errand cards with category filters and an add form.
+- **Errands** (`#errands`): errand cards with location filters and an add form.
 - **Classes** (`#classes`): import from an `.ics` file or pasted text, edit classes, and set walking pace and buffer.
 - **Map** (`#map`): schematic route map per window, or all stops.
 - **Walk together** (`#walk`): walking-buddy UI. Matching is not live; buddies are labeled sample profiles.
@@ -30,7 +30,7 @@ A desktop web app (columns stack on narrow screens), styled after the CodeCollab
 | Top bar and tabs | `index.html` |
 | Page layouts | `pages/*.html` |
 | Colors, typography, spacing | `styles/main.css` |
-| Campus locations, sample hours, errand categories | `src/data/locations.js` |
+| Campus locations and sample hours | `src/data/locations.js` |
 | Default errands, classes, settings, sample buddies | `src/data/demo.js` |
 | Today page | `src/features/today/today.js` |
 | Plan view and "didn't fit" explanations | `src/features/planning/planner.js` |
@@ -40,7 +40,8 @@ A desktop web app (columns stack on narrow screens), styled after the CodeCollab
 | Classes page | `src/features/classes/classes.js` |
 | `.ics` and pasted-schedule parsing | `src/features/classes/import.js` |
 | Map page | `src/features/map/map.js` |
-| Schematic map drawing | `src/components/route-map.js` |
+| Interactive map (Leaflet + OpenStreetMap, real walking paths) | `src/components/live-map.js` |
+| Offline fallback map drawing | `src/components/route-map.js` |
 | Walk together page | `src/features/walk/walk.js` |
 | Free windows and filling them with errands | `src/features/planning/day.js` |
 | Route scoring and scheduling constraints | `src/features/planning/optimizer.js` |
@@ -74,6 +75,10 @@ Preserve existing element IDs when changing layouts because feature modules use 
 ## Planning algorithm
 
 Free windows are the gaps between today's classes. Windows are filled in order; each takes the best route over errands not already placed. Up to eight errands are evaluated in feasible orders. Plans maximize completed errands, then minimize walking, then prefer earlier arrival. The next class ends the window and sets its destination. Service duration must finish before closing and any task deadline. Final walking and the arrival buffer must fit too.
+
+## Maps
+
+Maps use [Leaflet](https://leafletjs.com) with OpenStreetMap tiles (loaded from the internet in `index.html`, no API key). Walking paths are drawn using the public FOSSGIS foot-routing server (`routing.openstreetmap.de`), which receives only building coordinates. Walking *times* still come from `walking.js` estimates. Without internet, the app falls back to a drawn schematic map. These free services are for light use; for heavier use, switch to a paid tile/routing provider or Google Maps (which needs an API key with billing).
 
 ## Checks
 

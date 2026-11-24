@@ -4,12 +4,14 @@ import { place } from '../../data/locations.js';
 import { walk } from './walking.js';
 import { optimize } from './optimizer.js';
 import { acceptWindow, clearAccepted } from './accept.js';
-import { routeMap, legOf } from '../../components/route-map.js';
+import { legOf } from '../../components/route-map.js';
+import { showRoute } from '../../components/live-map.js';
 
 function reason(t, w) {
   const p = place(t.loc);
   const earliest = Math.max(w.start + walk(w.origin, t.loc), p.open) + t.duration;
   if (earliest > p.close) return `${p.short} closes at ${fmt(p.close)} before you could finish.`;
+  if (t.deadline === -1) return 'It’s already overdue.';
   if (t.deadline != null && earliest > t.deadline) return 'Can’t finish before it’s due.';
   if (!optimize([t], w.start, w.end, w.origin, w.dest, w.buffer).route.length) {
     if (p.open > w.start + walk(w.origin, t.loc)) return `${p.short} doesn’t open until ${fmt(p.open)}.`;
@@ -24,7 +26,7 @@ export function renderPlan(day, index) {
   if (!w) {
     $('plantitle').textContent = 'Plan';
     $('plansub').textContent = 'This window no longer exists.';
-    $('steps').innerHTML = $('didntfit').innerHTML = $('planmap').innerHTML = '';
+    $('steps').innerHTML = $('didntfit').innerHTML = '';
     $('startplan').classList.add('hidden');
     return;
   }
@@ -61,7 +63,7 @@ export function renderPlan(day, index) {
       <p class="meta">${esc(t.name)} (${t.duration} min). ${reason(t, w)}</p>${action}</div>`;
   }).join('');
 
-  $('planmap').innerHTML = routeMap({ legs: [legOf(w)], skipped: w.skipped.map(t => t.loc) });
+  showRoute('planmap', { legs: [legOf(w)], skipped: w.skipped.map(t => t.loc) });
 
   const button = $('startplan');
   button.classList.toggle('hidden', !w.best.route.length);

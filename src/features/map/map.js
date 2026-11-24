@@ -2,7 +2,8 @@ import { $, esc } from '../../lib/dom.js';
 import { clock, fmt } from '../../lib/time.js';
 import { place } from '../../data/locations.js';
 import { state, save } from '../../state/store.js';
-import { routeMap, legOf } from '../../components/route-map.js';
+import { legOf } from '../../components/route-map.js';
+import { showRoute } from '../../components/live-map.js';
 import { acceptWindow } from '../planning/accept.js';
 import { primaryWindow } from '../today/today.js';
 
@@ -34,13 +35,13 @@ export function renderMap(day) {
     + (routed.length > 1 ? `<button class="pill ${current === 'all' ? 'selected' : ''}" data-window="all">All stops</button>` : '');
 
   if (current === null) {
-    $('bigmap').innerHTML = routeMap();
+    showRoute('bigmap');
     $('maplist').innerHTML = '<div class="card"><h3>No route yet</h3><p class="meta">Add errands, or open a free window on Today to plan one.</p></div>';
     $('mapstart').classList.add('hidden');
     return;
   }
   if (current === 'all') {
-    $('bigmap').innerHTML = routeMap({ legs: routed.map(x => legOf(x.w)), skipped: day.unplanned.map(t => t.loc) });
+    showRoute('bigmap', { legs: routed.map(x => legOf(x.w)), skipped: day.unplanned.map(t => t.loc) });
     let offset = 0, list = '';
     for (const { w } of routed) {
       list += `<p class="meta spaced">${clock(w.start)} – ${clock(w.end)} window</p>` + stopCards(w, offset);
@@ -52,7 +53,7 @@ export function renderMap(day) {
   }
   const w = day.windows[current];
   const skipped = w.skipped;
-  $('bigmap').innerHTML = routeMap({ legs: [legOf(w)], skipped: skipped.map(t => t.loc) });
+  showRoute('bigmap', { legs: [legOf(w)], skipped: skipped.map(t => t.loc) });
   $('maplist').innerHTML = `<div class="card window solid"><h3>Total walk ${w.best.walking} min est.</h3>
       <p class="meta">${w.dest ? `Arrive ${clock(w.best.finish)}` : `Done by ${clock(w.best.finish)}`}</p></div>`
     + stopCards(w, 0)

@@ -6,7 +6,8 @@ import { place } from '../../data/locations.js';
 import { state } from '../../state/store.js';
 import { candidatesFor, nowMinutes } from '../planning/day.js';
 import { clearAccepted, nextStop, advance } from '../planning/accept.js';
-import { routeMap, legOf } from '../../components/route-map.js';
+import { legOf } from '../../components/route-map.js';
+import { showRoute } from '../../components/live-map.js';
 import { focusErrandForm } from '../errands/errands.js';
 
 const row = (time, card) => `<div class="trow"><span class="tlabel">${time == null ? '' : clock(time)}</span>${card}</div>`;
@@ -125,7 +126,7 @@ export function renderToday(day) {
     $('sidecard').innerHTML = `<h3>Progress</h3><p class="meta">${done} of ${plural(acc.stops.length, 'errand')} done in this window</p>
       <div class="bar"><span style="width:${acc.stops.length ? done / acc.stops.length * 100 : 0}%"></span></div>`;
     $('routetitle').textContent = 'Route';
-    $('todaymap').innerHTML = routeMap({ legs: [{ origin: acc.origin, stops: acc.stops, dest: acc.dest }], compact: true });
+    showRoute('todaymap', { legs: [{ origin: acc.origin, stops: acc.stops, dest: acc.dest }], compact: true });
     $('routecaption').textContent = '';
   } else {
     const n = waiting.length;
@@ -141,7 +142,7 @@ export function renderToday(day) {
       }).join('')
       : '<p class="meta">Nothing waiting.</p>');
     $('routetitle').textContent = 'Today’s route';
-    $('todaymap').innerHTML = routeMap({ legs: primary ? [legOf(primary.w)] : [], compact: true });
+    showRoute('todaymap', { legs: primary ? [legOf(primary.w)] : [], compact: true });
     $('routecaption').textContent = primary ? `Suggested route for the ${clock(primary.w.start)} window.` : 'Plan a window to see stops here.';
   }
 }
