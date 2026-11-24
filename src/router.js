@@ -1,6 +1,7 @@
 import { $ } from './lib/dom.js';
-// Add a page here, then add pages/NAME.html, a section and navigation button in index.html.
-export const pageNames = ['planner', 'classes', 'about'];
+// Add a page here, then add pages/NAME.html and a section and tab in index.html.
+// Hashes may carry a parameter: #plan/1 opens the plan for free window 1.
+export const pageNames = ['today', 'ahead', 'errands', 'classes', 'map', 'walk', 'plan'];
 export async function loadPages() {
   await Promise.all(pageNames.map(async name => {
     const response = await fetch(`pages/${name}.html`);
@@ -8,14 +9,20 @@ export async function loadPages() {
     $(name).innerHTML = await response.text();
   }));
 }
-export function bindNavigation() {
+export function currentRoute() {
+  const [name, param] = location.hash.slice(1).split('/');
+  return { page: pageNames.includes(name) ? name : 'today', param };
+}
+export function bindNavigation(onShow) {
   function showPage() {
-    const name = location.hash.slice(1);
-    const active = pageNames.includes(name) ? name : 'planner';
-    pageNames.forEach(page => $(page).classList.toggle('hidden', page !== active));
+    const { page, param } = currentRoute();
+    pageNames.forEach(name => $(name).classList.toggle('hidden', name !== page));
+    const tab = page === 'plan' ? 'today' : page;
     document.querySelectorAll('[data-tab]').forEach(button => {
-      button.classList.toggle('active', button.dataset.tab === active);
+      button.classList.toggle('active', button.dataset.tab === tab);
     });
+    onShow(page, param);
+    window.scrollTo(0, 0);
   }
   document.querySelectorAll('[data-tab]').forEach(button => {
     button.onclick = () => { location.hash = button.dataset.tab; };

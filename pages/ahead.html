@@ -1,0 +1,29 @@
+<header class="pagehead">
+  <div>
+    <h1>Plan ahead</h1>
+    <p class="meta">Pick a day, check its free time, then add errands.</p>
+  </div>
+  <div class="row gap">
+    <button class="pill" id="prevweek">Prev week</button>
+    <b class="weeklabel" id="weeklabel"></b>
+    <button class="pill" id="nextweek">Next week</button>
+  </div>
+</header>
+<h3 class="step"><span class="num">1</span>Pick a day</h3>
+<div class="week" id="week"></div>
+<div class="layout">
+  <div class="col-main">
+    <h3 class="step"><span class="num">2</span><span id="aheadtitle"></span></h3>
+    <div class="timeline" id="aheadlist"></div>
+    <div id="aheaddidntfit"></div>
+  </div>
+  <aside class="col-side">
+    <div class="card">
+      <h3 class="step"><span class="num">3</span>Add to this day</h3>
+      <div id="aheadadd"></div>
+    </div>
+    <button class="primary" id="autoplan">Auto-plan</button>
+    <button class="outline" id="aheadnew">+ New errand</button>
+    <p class="meta" id="aheadmsg" role="status"></p>
+  </aside>
+</div>

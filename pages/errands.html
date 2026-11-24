@@ -1,0 +1,25 @@
+<header class="pagehead">
+  <h1>Errands</h1>
+  <div class="filters" id="filters"></div>
+</header>
+<div class="layout">
+  <div class="col-main">
+    <div class="grid2" id="errandlist"></div>
+  </div>
+  <aside class="col-side">
+    <form class="card dashed form" id="add">
+      <h3>Add an errand</h3>
+      <label>Errand<input id="task" required maxlength="80" placeholder="Pick up package"></label>
+      <label>Place<select id="location"></select></label>
+      <label>Duration (min)<input id="duration" type="number" min="1" max="180" value="10" required></label>
+      <div class="fields">
+        <label>Deadline<input id="duedate" type="date"></label>
+        <label>Time<input id="duetime" type="time"></label>
+      </div>
+      <label>Share with<input id="shared" maxlength="60" placeholder="Roommates (optional)"></label>
+      <label>Note<input id="note" maxlength="80" placeholder="Bring ID (optional)"></label>
+      <p class="error" id="errandmessage" role="alert"></p>
+      <button class="primary">Save errand</button>
+    </form>
+  </aside>
+</div>

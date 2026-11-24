@@ -9,15 +9,17 @@ import {
 // Exhaustively evaluate feasible stop orders;
 // Keep the eight-task MVP limit.
 // Objective: most tasks, then least walking, then earliest arrival.
+// dest may be null when nothing follows the window (no final walk required).
 export function optimize(tasks,start,end,origin,dest,buffer){
+  const toDest=loc=>dest?walk(loc,dest):0;
   let best={
-    route:[],walking:walk(origin,dest),finish:start+walk(origin,dest)
+    route:[],walking:toDest(origin),finish:start+toDest(origin)
   };
   function visit(route,remaining,time,loc,walking){
-    let finish=time+walk(loc,dest);
+    let finish=time+toDest(loc);
     if(finish+buffer>end)return;
-    if(route.length>best.route.length||(route.length===best.route.length&&(walking+walk(loc,dest)<best.walking||(walking+walk(loc,dest)===best.walking&&finish<best.finish))))best={
-      route:[...route],walking:walking+walk(loc,dest),finish
+    if(route.length>best.route.length||(route.length===best.route.length&&(walking+toDest(loc)<best.walking||(walking+toDest(loc)===best.walking&&finish<best.finish))))best={
+      route:[...route],walking:walking+toDest(loc),finish
     };
     for(const t of remaining){
       const w=walk(loc,t.loc),p=place(t.loc),arrival=time+w,begin=Math.max(arrival,p.open),done=begin+t.duration;

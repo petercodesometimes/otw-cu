@@ -1,22 +1,53 @@
-<div class="card" style="max-width:700px">
-<h2>My class schedule</h2>
-<p>Add classes for the day you’re planning. The planner checks every class and gets you to the next one on time.</p>
-<div id="classlist">
-</div>
-<form id="classform">
-<label>Class name<input id="classname" required placeholder="Intro to Computer Science" maxlength="80">
-</label>
-<div class="fields">
-<label>Start<input id="classstart" type="time" required value="13:00">
-</label>
-<label>End<input id="classend" type="time" required value="14:15">
-</label>
-<label class="full">Building<select id="classlocation">
-</select>
-</label>
-</div>
-<button>Add class</button>
-<p id="classerror" role="alert">
-</p>
-</form>
+<header class="pagehead">
+  <div>
+    <h1>Classes</h1>
+    <p class="meta">Enter once. We use it to find your free windows.</p>
+  </div>
+  <button class="primary sm" id="importtop">Import classes</button>
+</header>
+<div class="layout">
+  <div class="col-main">
+    <div class="card dashed center" id="importcard">
+      <h3>Import your classes</h3>
+      <p class="meta">Drop a calendar file (.ics), or paste your schedule text. We never log in to university systems.</p>
+      <div class="btnrow">
+        <button class="primary sm" id="uploadics">Upload .ics file</button>
+        <button class="outline sm" id="pastebtn">Paste schedule</button>
+        <button class="outline sm" id="photobtn">Add by photo</button>
+      </div>
+      <input type="file" id="icsfile" accept=".ics,text/calendar" hidden>
+      <div class="pastebox hidden" id="pastebox">
+        <textarea id="pastetext" rows="4" placeholder="One class per line, e.g.&#10;Intro Stats, Mon/Wed/Fri, 10:00-11:15, Hamilton Hall"></textarea>
+        <button class="primary sm" id="pasteimport">Import</button>
+      </div>
+      <p class="meta" id="importmsg" role="status"></p>
+    </div>
+    <div id="classlist"></div>
+    <div class="card">
+      <h3>Settings</h3>
+      <p class="meta settingsline">
+        Walking pace: <button class="pill" id="pace"></button>
+        · Buffer between stops: <button class="pill" id="buffer"></button>
+        · <button class="link" id="reset">Reset demo data</button>
+      </p>
+    </div>
+  </div>
+  <aside class="col-side">
+    <form class="card dashed form" id="classform">
+      <h3 id="classformtitle">Or add one manually</h3>
+      <label>Name<input id="classname" required maxlength="80" placeholder="Intro Stats"></label>
+      <fieldset class="days" id="classdays"><legend>Days</legend></fieldset>
+      <div class="fields">
+        <label>Start<input id="classstart" type="time" required value="10:00"></label>
+        <label>End<input id="classend" type="time" required value="11:15"></label>
+      </div>
+      <label>Building<select id="classlocation"></select></label>
+      <p class="error" id="classerror" role="alert"></p>
+      <button class="primary">Save class</button>
+      <div class="formactions hidden" id="editactions">
+        <button type="button" class="outline sm" id="classcancel">Cancel</button>
+        <button type="button" class="outline sm danger" id="classdelete">Delete class</button>
+      </div>
+    </form>
+  </aside>
 </div>

@@ -1,80 +1,89 @@
-import {
-   $, esc 
-} from '../../lib/dom.js';
+import { $, esc } from '../../lib/dom.js';
+import { clock, fmt } from '../../lib/time.js';
+import { place } from '../../data/locations.js';
+import { walk } from './walking.js';
+import { optimize } from './optimizer.js';
+import { acceptWindow, clearAccepted } from './accept.js';
+import { routeMap, legOf } from '../../components/route-map.js';
 
-import {
-   fmt, mins 
-} from '../../lib/time.js';
+function reason(t, w) {
+  const p = place(t.loc);
+  const earliest = Math.max(w.start + walk(w.origin, t.loc), p.open) + t.duration;
+  if (earliest > p.close) return `${p.short} closes at ${fmt(p.close)} before you could finish.`;
+  if (t.deadline != null && earliest > t.deadline) return 'Can’t finish before it’s due.';
+  if (!optimize([t], w.start, w.end, w.origin, w.dest, w.buffer).route.length) {
+    if (p.open > w.start + walk(w.origin, t.loc)) return `${p.short} doesn’t open until ${fmt(p.open)}.`;
+    const need = walk(w.origin, t.loc) + (w.dest ? walk(t.loc, w.dest) : 0);
+    return `Needs ${t.duration} min plus ${need} min walking; only ${w.end - w.start - w.buffer} min here.`;
+  }
+  return 'Fits on its own, but this plan fits more errands with less walking.';
+}
 
-import {
-   place 
-} from '../../data/locations.js';
+export function renderPlan(day, index) {
+  const w = day.windows[index];
+  if (!w) {
+    $('plantitle').textContent = 'Plan';
+    $('plansub').textContent = 'This window no longer exists.';
+    $('steps').innerHTML = $('didntfit').innerHTML = $('planmap').innerHTML = '';
+    $('startplan').classList.add('hidden');
+    return;
+  }
+  $('plantitle').textContent = `Plan · ${clock(w.start)}–${clock(w.end)}`;
+  $('plansub').textContent = w.next
+    ? `Includes est. walking time and a ${w.buffer} min buffer. Class at ${fmt(w.next.start)}.`
+    : 'Includes est. walking time. No more classes today.';
 
-import {
-   state, save 
-} from '../../state/store.js';
+  let html = '', loc = w.origin, lastDone = w.start;
+  w.best.route.forEach((t, k) => {
+    if (t.walk && k > 0) html += `<p class="connector">Walk ${t.walk} min${t.begin > t.arrival ? ` · wait ${t.begin - t.arrival} min for opening` : ''}</p>`;
+    html += `<div class="card stop solo"><h3>${clock(t.begin)} · ${esc(place(t.loc).short)}</h3>
+      <p class="meta">${esc(t.name)} · ${t.duration} min</p></div>`;
+    loc = t.loc;
+    lastDone = t.done;
+  });
+  if (!w.best.route.length) {
+    html += '<div class="card dashed"><h3>Nothing fits this window</h3><p class="meta">Try a longer window or a shorter errand.</p></div>';
+  } else if (w.dest) {
+    html += `<p class="connector">Walk ${walk(loc, w.dest)} min${w.buffer ? ` + ${w.buffer} min buffer` : ''}</p>
+      <div class="card stop solo"><h3>${clock(lastDone)} · Done, head to class</h3>
+      <p class="meta">Arrive ${esc(place(w.dest).short)} by ${clock(w.best.finish)}</p></div>`;
+  } else {
+    html += `<div class="card stop solo"><h3>${clock(lastDone)} · Done</h3><p class="meta">Free until ${clock(w.end)}</p></div>`;
+  }
+  $('steps').innerHTML = html;
 
-import {
-   walk 
-} from './walking.js';
+  $('didntfit').innerHTML = w.skipped.map(t => {
+    const later = day.windows.findIndex((x, j) => j > index && x.best.route.some(r => r.id === t.id));
+    const action = later >= 0
+      ? `<button class="outline sm" data-plan="${later}">Move to ${clock(day.windows[later].start)} window</button>`
+      : '<p class="meta">Doesn’t fit any other window today.</p>';
+    return `<div class="card dashed"><h3>Didn’t fit</h3>
+      <p class="meta">${esc(t.name)} (${t.duration} min). ${reason(t, w)}</p>${action}</div>`;
+  }).join('');
 
-import {
-   optimize 
-} from './optimizer.js';
+  $('planmap').innerHTML = routeMap({ legs: [legOf(w)], skipped: w.skipped.map(t => t.loc) });
 
-import {
-   draw 
-} from '../../components/campus-map.js';
+  const button = $('startplan');
+  button.classList.toggle('hidden', !w.best.route.length);
+  button.dataset.window = index;
+  button.dataset.mode = w.accepted ? 'replan' : 'start';
+  button.textContent = w.accepted ? 'Re-plan this window' : day.accepted ? 'Start plan (replaces current plan)' : 'Start plan';
+}
 
-export function plan(){
-  const start=mins($('start').value),requestedEnd=mins($('end').value),buffer=+$('buffer').value,origin=$('origin').value;
-  let end=requestedEnd,dest=$('destination').value;
-  const error=m=>{
-    $('message').textContent=m;
-    $('timeline').innerHTML='<div class="empty">Adjust your window to generate a route.</div>';
-    $('deferred').innerHTML='';
-    $('headline').textContent='Let’s adjust that window';
-    $('walkstat').textContent='—';
-    $('sparestat').textContent='—';
-    $('subline').textContent='';
-    draw([])
+export function bindPlan(getDay, onChange) {
+  $('back').onclick = () => { location.hash = 'today'; };
+  $('didntfit').onclick = e => {
+    const button = e.target.closest('[data-plan]');
+    if (button) location.hash = `plan/${button.dataset.plan}`;
   };
-  if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start){
-    error('Choose a same-day window with an end later than its start.');
-    return
-  }const conflict=state.classes.find(c=>start>=c.start&&start<c.end);
-  if(conflict){
-    error(`Your start time overlaps ${conflict.name}. Try after ${fmt(conflict.end)}.`);
-    return
-  }const next=state.classes.filter(c=>c.start>=start&&c.start<=end).sort((a,b)=>a.start-b.start)[0];
-  if(next){
-    end=next.start;
-    dest=next.loc
-  }$('message').textContent='';
-  if(start+walk(origin,dest)+buffer>end){
-    error('There isn’t enough time to reach your destination with this buffer.');
-    return
-  }const tasks=state.tasks.filter(t=>t.selected),best=optimize(tasks,start,end,origin,dest,buffer);
-  $('headline').textContent=best.route.length?`${best.route.length} stop${best.route.length===1?'':'s'}, all on the way.`:'Nothing fits this window yet.';
-  $('walkstat').textContent=best.walking;
-  $('sparestat').textContent=end-buffer-best.finish;
-  $('subline').textContent=`${fmt(start)}–${fmt(end)}${next?' · before '+next.name:''}`;
-  let html=`<div class="stop"><div class="time">${fmt(start)}</div><h3>Start at ${place(origin).name}</h3></div>`;
-  let loc=origin;
-  for(const t of best.route){
-    html+=`<div class="stop"><div class="time">${fmt(t.begin)}–${fmt(t.done)}</div><h3>${esc(t.name)}</h3><div class="small">${place(t.loc).name}</div><div class="walk">↗ ${t.walk} min walk${t.begin>t.arrival?' · '+(t.begin-t.arrival)+' min wait for opening':''} · ${t.duration} min there</div></div>`;
-    loc=t.loc
-  }html+=`<div class="stop"><div class="time">${fmt(best.finish)}</div><h3>Arrive at ${place(dest).name}</h3><div class="small">${walk(loc,dest)} min final walk · ${buffer} min arrival buffer reserved</div></div>`;
-  $('timeline').innerHTML='<div class="timeline">'+html+'</div>';
-  const skipped=tasks.filter(t=>!best.route.some(r=>r.id===t.id));
-  $('deferred').innerHTML=skipped.length?'<h2>Save for another window</h2>'+skipped.map(t=>{
-    const p=place(t.loc);
-    let why;
-    if(Math.max(start+walk(origin,t.loc),p.open)+t.duration>p.close)why='The service closes before you could finish.';
-    else if(t.deadline&&Math.max(start+walk(origin,t.loc),p.open)+t.duration>t.deadline)why='You cannot finish before its deadline.';
-    else if(optimize([t],start,end,origin,dest,buffer).route.length===0)why='Walking, service time, opening hours, and your arrival buffer exceed this window.';
-    else why='It fits alone. The chosen route fits more stops on the way, or the same number with less walking.';
-    return `<div class="deferred"><h3>${esc(t.name)}</h3><div class="small">${why}</div></div>`
-  }).join(''):'';
-  draw([origin,...best.route.map(t=>t.loc),dest])
+  $('startplan').onclick = () => {
+    const button = $('startplan');
+    if (button.dataset.mode === 'replan') {
+      clearAccepted();
+      onChange();
+      return;
+    }
+    acceptWindow(getDay(), Number(button.dataset.window));
+    location.hash = 'today';
+  };
 }

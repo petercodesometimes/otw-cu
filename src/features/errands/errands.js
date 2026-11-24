@@ -1,61 +1,76 @@
-import {
-   $, esc 
-} from '../../lib/dom.js';
+import { $, esc } from '../../lib/dom.js';
+import { mins } from '../../lib/time.js';
+import { dayName, todayIso } from '../../lib/date.js';
+import { dueLabel, hoursLabel, verifiedLabel } from '../../lib/labels.js';
+import { place, categories } from '../../data/locations.js';
+import { state, save } from '../../state/store.js';
 
-import {
-   fmt, mins 
-} from '../../lib/time.js';
+// Exhaustive route search keeps the MVP at eight errands.
+const MAX_ERRANDS = 8;
+let filter = 'all';
 
-import {
-   place 
-} from '../../data/locations.js';
-
-import {
-   state, save 
-} from '../../state/store.js';
-
+export function focusErrandForm() {
+  setTimeout(() => { $('add').scrollIntoView({ block: 'center' }); $('task').focus(); }, 50);
+}
 
 export function renderErrands() {
-  
- $('count').textContent=state.tasks.length+(state.tasks.length===1?' stop':' stops');
-  $('errands').innerHTML=state.tasks.map(t=>{
-    const p=place(t.loc);
-    return `<div class="errand"><input aria-label="Include ${esc(t.name)}" type="checkbox" data-select="${t.id}" ${t.selected?'checked':''}><div class="info"><h3>${esc(t.name)}</h3><div class="small">${p.name} · ${t.duration} min</div><div class="small">Demo hours ${fmt(p.open)}–${fmt(p.close)}${t.deadline?' · Due '+fmt(t.deadline):''}</div></div><button class="delete" data-delete="${t.id}" aria-label="Delete ${esc(t.name)}">×</button></div>`
-  }).join('')||'<p>Nothing on your list yet. Add your first stop below.</p>';
-  
-
+  $('filters').innerHTML = [{ id: 'all', label: 'All' }, ...categories].map(c =>
+    `<button class="pill ${filter === c.id ? 'selected' : ''}" data-filter="${c.id}">${c.label}</button>`
+  ).join('');
+  const shown = state.tasks.filter(t => filter === 'all' || place(t.loc).category === filter);
+  $('errandlist').innerHTML = shown.map(t => {
+    const p = place(t.loc);
+    const details = [
+      t.dueDate && dueLabel(t),
+      t.scheduled && (t.scheduled === todayIso() ? 'Planned for today' : `Planned for ${dayName(t.scheduled)}`),
+      t.shared && `Shared with ${esc(t.shared)}`
+    ].filter(Boolean);
+    return `<div class="card errand">
+      <h3>${esc(t.name)} · ${t.duration} min</h3>
+      <p class="meta">${esc(p.short)} · ${hoursLabel(p)} · ${verifiedLabel(p)}${t.note ? ` · ${esc(t.note)}` : ''}</p>
+      ${details.length ? `<p class="meta">${details.join(' · ')}</p>` : ''}
+      <button class="link danger" data-delete="${t.id}">Remove</button></div>`;
+  }).join('') || `<p class="meta">${state.tasks.length ? 'No errands in this category.' : 'Nothing on your list yet. Add one on the right.'}</p>`;
 }
+
 export function bindErrands(onChange) {
-  
-$('errands').onclick=e=>{
-    if(e.target.dataset.delete){
-      state.tasks=state.tasks.filter(t=>t.id!=e.target.dataset.delete);
-      save();
-      renderErrands();
-      onChange()
-    }
+  $('filters').onclick = e => {
+    const button = e.target.closest('[data-filter]');
+    if (!button) return;
+    filter = button.dataset.filter;
+    renderErrands();
   };
-  $('errands').onchange=e=>{
-    if(e.target.dataset.select){
-      state.tasks.find(t=>t.id==e.target.dataset.select).selected=e.target.checked;
-      save();
-      onChange()
-    }
+  $('errandlist').onclick = e => {
+    const remove = e.target.closest('[data-delete]');
+    if (!remove) return;
+    const id = Number(remove.dataset.delete);
+    state.tasks = state.tasks.filter(t => t.id !== id);
+    save();
+    onChange();
   };
-  
-$('add').onsubmit=e=>{
+  $('add').onsubmit = e => {
     e.preventDefault();
-    if(state.tasks.length>=8){
-      $('message').textContent='This MVP supports up to eight stops. Remove one to add another.';
-      return
-    }state.tasks.push({
-      id:Date.now(),name:$('task').value.trim()||'New stop',loc:$('location').value,duration:+$('duration').value,deadline:$('deadline').value?mins($('deadline').value):null,selected:true
+    if (state.tasks.length >= MAX_ERRANDS) {
+      $('errandmessage').textContent = 'This MVP supports up to eight errands. Remove one to add another.';
+      return;
+    }
+    const dueTime = $('duetime').value ? mins($('duetime').value) : null;
+    let dueDate = $('duedate').value || null;
+    if (dueTime != null && !dueDate) dueDate = todayIso();
+    $('errandmessage').textContent = '';
+    state.tasks.push({
+      id: Date.now(),
+      name: $('task').value.trim() || 'New errand',
+      loc: $('location').value,
+      duration: +$('duration').value,
+      dueDate,
+      dueTime,
+      note: $('note').value.trim(),
+      shared: $('shared').value.trim(),
+      scheduled: null
     });
     save();
-    renderErrands();
-    $('task').value='';
-    onChange()
+    $('add').reset();
+    onChange();
   };
-  
-
 }

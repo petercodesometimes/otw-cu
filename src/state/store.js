@@ -1,5 +1,5 @@
 import { seed } from '../data/demo.js';
-const KEY = 'otw-v1';
+const KEY = 'otw-v3';
 let state;
 try {
   state = JSON.parse(localStorage.getItem(KEY)) || seed();

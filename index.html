@@ -4,31 +4,26 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>OTW CU</title>
   <link rel="stylesheet" href="styles/main.css" />
-  <header>
-    <div class="brand">↗ OTW<span>CU</span></div>
-    <nav>
-      <button class="active" data-tab="planner">Day planner</button>
-      <button data-tab="classes">My classes</button>
-      <button data-tab="about">About MVP</button>
+  <header class="topbar">
+    <a class="brand" href="#today">OTW CU</a>
+    <nav class="tabs">
+      <button data-tab="today">Today</button>
+      <button data-tab="ahead">Plan ahead</button>
+      <button data-tab="errands">Errands</button>
+      <button data-tab="classes">Classes</button>
+      <button data-tab="map">Map</button>
+      <button data-tab="walk">Walk together</button>
     </nav>
-    <div class="avatar">CU</div>
+    <span class="pill static" id="headerdate"></span>
   </header>
   <main>
-    <div class="intro">
-      <div>
-        <div class="eyebrow">EVERYTHING’S ON THE WAY.</div>
-        <h1>Your day, in the right order.</h1>
-        <p>Your classes come first. Let’s fit the rest around them.</p>
-      </div>
-      <span class="chip">◷ Built for the Columbia campus</span>
-    </div>
-    <section id="planner"></section>
+    <section id="today"></section>
+    <section id="ahead" class="hidden"></section>
+    <section id="errands" class="hidden"></section>
     <section id="classes" class="hidden"></section>
-    <section id="about" class="hidden"></section>
-    <footer>
-      OTW CU &nbsp; / &nbsp; An independent student project. Not affiliated with
-      Columbia University.
-    </footer>
+    <section id="map" class="hidden"></section>
+    <section id="walk" class="hidden"></section>
+    <section id="plan" class="hidden"></section>
   </main>
   <script type="module" src="src/main.js"></script>
 </html>
